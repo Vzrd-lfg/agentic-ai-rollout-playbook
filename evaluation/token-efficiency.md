@@ -1,0 +1,32 @@
+# Token Efficiency
+
+Token cost is an engineering metric. At scale, a 30% reduction in tokens per request is the difference between a cost-effective programme and one that is cancelled. The cost of an agentic system is not fixed at design time — it is determined by the token consumption profile of each agent, the model tier that handles each task, and the efficiency of retrieval and context management. The eight levers below are ranked by typical impact and ease of implementation. Most programmes capture the first three with modest effort and achieve 40–60% cost reduction before touching the more complex levers.
+
+## Eight Cost Levers
+
+| Rank | Lever | Typical Impact | Implementation Effort |
+|---|---|---|---|
+| 1 | Prompt caching | 20–40% cost reduction | Low (provider feature) |
+| 2 | Model tiering | 30–70% cost reduction | Medium (routing logic) |
+| 3 | Context window management | 10–30% cost reduction | Medium (summarisation or truncation) |
+| 4 | Retrieval quality | 10–25% cost reduction | Medium (fewer irrelevant chunks injected) |
+| 5 | Output length control | 5–20% cost reduction | Low (max_tokens, structured output) |
+| 6 | Tool call minimisation | 5–15% cost reduction | Medium (tool call deduplication) |
+| 7 | Batch inference | 30–50% cost reduction (latency trade) | Low (provider feature) |
+| 8 | Eval feedback loop | Compound reduction over time | High (requires eval infrastructure) |
+
+**Prompt Caching.** Anthropic's prompt caching and Vertex AI context caching allow the model provider to cache the system prompt and any static context across requests. This is the highest-impact, lowest-effort lever: enable caching, ensure the system prompt is stable across requests, and reduce input token cost by 20–40% immediately. For agents with large tool catalogs embedded in the system prompt — which is the common case — the cached portion of the input is substantial and the savings are proportionally large. The only implementation constraint is that the cached prefix must be byte-identical across requests; any dynamic injection into the system prompt body defeats the cache.
+
+**Model Tiering.** Not every task requires a frontier model. A lightweight classifier model handles routing and intent classification; a mid-tier model handles most Worker tasks — extraction, drafting, summarisation; the frontier model is reserved for complex multi-step reasoning, legal analysis, or tasks where the quality gap between tiers is material. Tiering requires routing logic in the orchestration spine, but the routing decision is a configuration entry in the model router policy, not a code change. The cost reduction from tiering is the largest available lever for programmes that have been defaulting all tasks to the flagship model. Verify current pricing tiers with each provider at design time; the ratio between tiers changes with provider competition.
+
+**Context Window Management.** The most expensive context is stale context: prior messages that no longer affect the response but still consume input tokens on every call. This accumulates silently in multi-turn agents. Two mitigations address it: rolling summarisation (replace older turns with a compressed summary injected as a single message) and recency-biased truncation (drop the oldest turns first when the context budget is approached). Neither is universally correct — summarisation trades precision for compression; truncation trades continuity for simplicity. The eval harness measures which strategy maintains faithfulness and accuracy for the specific agent's task type.
+
+**Retrieval Quality.** Every irrelevant chunk injected into the model context is a token wasted, and it degrades accuracy as well as adding cost. The cheap mitigation — increasing top-K to cover for low retrieval precision — is a cost multiplier, not a solution. Improving retrieval precision through better re-ranking models, tighter chunk boundaries, and metadata filtering reduces the number of chunks required to achieve the target faithfulness score. Five well-chosen chunks are consistently cheaper and more accurate than twenty mediocre ones.
+
+**Output Length Control.** Set explicit `max_tokens` constraints on every model call. Use structured output formats — JSON or YAML with explicit field definitions — rather than free-form prose where the downstream consumer is a system rather than a human. Free-form prose with a "be concise" instruction in the system prompt is a hint; a JSON schema with constrained field lengths is a hard boundary. For streaming endpoints, token counting on the output stream allows early termination when the structured output is complete.
+
+**Tool Call Minimisation.** Cache tool results where the tool is deterministic and the input has not changed within the same agent run. Deduplicate tool calls across planning steps: a Planner that generates the same tool call twice in a single plan has a quality problem that caching will mask rather than fix. Address the duplication at the Planner level through output schema validation that rejects redundant steps. Track tool call count as a metric per agent; sustained increases in tool calls per run indicate Planner quality degradation.
+
+**Batch Inference.** For non-real-time tasks — overnight document processing, bulk classification, scheduled analysis workflows — batch inference APIs reduce cost by 30–50% at the cost of latency. The trade is appropriate only when the task does not require a synchronous response. Batch jobs submit a set of requests and collect results hours later. This lever applies to a narrow but common class of enterprise workloads: the weekly compliance document review, the nightly contract extraction pipeline, the end-of-month reporting agent.
+
+**Eval Feedback Loop.** The eval harness identifies which agent tasks have the highest cost variance — cases where the agent uses substantially more tokens than the median. Targeted optimisation of high-cost, high-volume tasks — typically by tightening retrieval for specific query categories or adding structured output constraints to specific task types — compounds over time. This lever has the highest implementation effort because it requires functioning eval infrastructure (the prerequisite), systematic cost attribution by task type, and an iteration cadence. It has the most durable impact because the optimisations are grounded in real production cost data rather than upfront estimates.

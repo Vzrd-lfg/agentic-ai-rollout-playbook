@@ -1,0 +1,30 @@
+cff-version: 1.2.0
+message: "If you use this playbook in published work, please cite it as below."
+authors:
+  - family-names: Sathiapathi
+    given-names: Vishnu
+    email: vishnu.sathiap@gmail.com
+title: "Agentic AI Rollout Playbook"
+version: 1.0.0
+date-released: 2026-05-11
+url: "https://github.com/vsathiapathi/agentic-ai-rollout-playbook"
+license: CC-BY-NC-4.0
+abstract: >
+  A reusable, opinionated blueprint for deploying agentic AI across the
+  enterprise on AWS Bedrock + AgentCore and GCP Vertex AI. Covers orchestration
+  patterns, RAG architecture, governance frameworks, evaluation harness design,
+  90-day rollout planning, and fifteen documented production case studies.
+  Battle-tested in regulated environments including financial services,
+  healthcare, and logistics.
+keywords:
+  - agentic-ai
+  - enterprise-ai
+  - orchestration
+  - rag
+  - ai-governance
+  - bedrock
+  - bedrock-agentcore
+  - vertex-ai
+  - llm
+  - ai-rollout
+  - eu-ai-act
