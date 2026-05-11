@@ -6,7 +6,7 @@ A reusable, opinionated blueprint for deploying agentic AI at enterprise scale �
 
 ---
 
-##Why I built this — and what the playbook is for
+## Why I built this — and what the playbook is for
 
 I've spent the last several years building production agentic AI systems in compliance-sensitive environments — sanctions screening, proptech matching, logistics document intelligence — and the same conversation keeps recurring.
 
