@@ -6,6 +6,40 @@ A reusable, opinionated blueprint for deploying agentic AI at enterprise scale �
 
 ---
 
+##Why I built this — and what the playbook is for
+
+I've spent the last several years building production agentic AI systems in compliance-sensitive environments — sanctions screening, proptech matching, logistics document intelligence — and the same conversation keeps recurring.
+
+A new programme starts. A pilot succeeds. The pilot doesn't scale. Six months in, the team has shipped one impressive demo and is stuck on the second. Or worse: they've shipped widely, an incident happens, and the whole programme is paused while Legal, InfoSec, and Compliance work out what just happened.
+
+The pattern is so consistent that I started writing down the operating discipline that does work — the architectural decisions, the governance scaffolding, the rollout sequencing, the ways agents actually fail in production — as a reusable playbook. This repository is that playbook.
+
+---
+
+## Three things the playbook argues
+
+**1. The failure rate on complex agent tasks runs at 60–65%, and smarter foundation models will not, on their own, fix this.** The dominant failure modes are architectural: scope (the agent's job is too broad), composition (95% × 10 steps = 60% end-to-end accuracy), observability (the agent fails and nobody knows where), reliability (the same input produces different outputs), and drift (the agent worked at launch and is worse six months later). See [evaluation/failure-modes.md](evaluation/failure-modes.md).
+
+**2. The orchestration spine is the product, not the agent.** Planner → Router → Worker → Tool Executor, with four risk classes on the tool boundary (READ / WRITE_INTERNAL / WRITE_EXTERNAL / IRREVERSIBLE) and Cedar or OPA policy enforced *outside the model*. New use cases are configuration on the spine — tools, prompts, eval sets — not bespoke architecture. McKinsey calls this the "agentic mesh"; LinkedIn's published tech stack is the same idea operationalised. See [orchestration/](orchestration/) for the patterns and [docs/02-design-principles.md](docs/02-design-principles.md) for the operating positions.
+
+**3. Governance is scaffolded in on day one, not bolted on the week before audit.** An eight-check binary Approval Gate. An AI System Register. EU AI Act / ISO 42001 / NIST AI RMF / SR 11-7 / GDPR / DORA mapped to specific artefacts. The OWASP LLM Top-10 mapped to the controls already in the architecture. None of this is theoretical — it's what regulators expect to see. See [governance/](governance/).
+
+## What's published, and what isn't
+
+The patterns, frameworks, taxonomies, rollout discipline, and case-study evidence are published. The operational depth that *actually* differentiates production rollouts — the iterated prompts, the curated golden sets, the policy packs, the IaC modules, the change-management collateral — is not.
+
+---
+
+## How to engage
+
+- **If you're a hiring manager** looking at this because you're evaluating me for an AI Programme / Director / Adoption role: the [49-page PDF playbook and 8-slide deck](mailto:vishnu.sathiap@gmail.com) expand on every section here and are available on request.
+- **If you're a peer practitioner** running an agentic programme: use the patterns freely under [CC BY-NC 4.0](LICENSE). If you'd like to compare notes, open a Discussion.
+- **If you're an organisation** that would like the operational depth — Approval Gate templates, eval harness implementations, prompt libraries, policy packs, change-management collateral — those are part of consulting engagements. [Get in touch](mailto:vishnu.sathiap@gmail.com).
+
+Thanks for reading. The repository is a living document; the failure-mode catalogue alone grows every quarter from production incidents.
+
+---
+
 ## The Core Argument
 
 Most agentic AI programmes fail in one of three ways: a successful proof-of-concept that cannot survive the transition to production (*pilot purgatory*); a single over-scoped agent attempting too many tasks, failing unpredictably, and impossible to debug (*hero agents*); or agents touching production systems with no audit trail, no approval process, and no rollback plan until an incident forces a programme pause (*ungoverned rollouts*).
